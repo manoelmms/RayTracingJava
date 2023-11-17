@@ -5,11 +5,14 @@ import RayTracing.HitInfo.Interval;
 import RayTracing.HitInfo.Radiance;
 import RayTracing.HitTable.HitTable;
 
+import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintStream;
+import java.util.stream.IntStream;
 
 import static RayTracing.Utility.*;
 
@@ -17,9 +20,6 @@ public class Renderer {
 
     int image_width;
     int image_height;
-
-    int spp = 50; // samples per pixel
-
     int depth = 50;
 
     Camera camera;
@@ -71,9 +71,11 @@ public class Renderer {
         return new java.awt.Color(R, G, B);
     }
 
+
     Color skyColor(Ray r) {
         Vec3 unit_direction = Vec3.unitVector(r.dir());
 
+        // Linear interpolation between white and blue trick
         double t = 0.5*(unit_direction.y+1.0);
 
         Color colorW = new Color(1.0,1.0,1.0);
@@ -99,8 +101,8 @@ public class Renderer {
         return skyColor(r);
     }
 
-    void imageRender(HitTable scene){
-        try(FileOutputStream file = new FileOutputStream("Output.ppm");
+    void imageRender(HitTable scene, int spp, String filename) {
+        try(FileOutputStream file = new FileOutputStream(filename);
             PrintStream filePrint = new PrintStream(file) ) {
 
             filePrint.println("P3");
@@ -109,8 +111,9 @@ public class Renderer {
 
             System.out.println(image_width + "x" + image_height + ", " + spp + " samples per pixel");
             long start_time = System.currentTimeMillis(); //Time for Benchmark
+
             for (long y=0; y < image_height; ++y) {
-                System.out.print("\r" + "Rows remaining: "+(image_height-y));
+                System.out.print("\r" + "Scanlines remaining: "+(image_height-y));
                 for (long x=0; x < image_width; ++x) {
                     Color pixelColor = new Color(0);
                     for (int s=0; s < spp; ++s) {
@@ -122,29 +125,69 @@ public class Renderer {
                 }
 
             }
-            System.out.println("\nJob finished in:" + (double)(System.currentTimeMillis()-start_time)/1000+"s");
+            System.out.println("\nJob finished in: " + (double)(System.currentTimeMillis()-start_time)/1000+"s");
 
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
     }
 
-    void windowRender(HitTable scene) {
+    void imageRenderParallel(HitTable scene, int spp, String filename) {
+
+        BufferedImage image = new BufferedImage(image_width, image_height, BufferedImage.TYPE_INT_RGB);
+
+        System.out.println(image_width + "x" + image_height + ", " + spp + " samples per pixel");
+        long start_time = System.currentTimeMillis(); //Time for Benchmark
+
+        for (long y=0; y < image_height; ++y) {
+            System.out.print("\r" + "Scanlines remaining: "+(image_height-y));
+            for (long x=0; x < image_width; ++x) {
+                Color pixelColor = new Color(0);
+
+                long finalX = x;
+                long finalY = y;
+                IntStream.range(0, spp).parallel().forEach(s -> {
+                    double u = (finalX + randomDouble()) / (image_width-1);
+                    double v = (finalY + randomDouble()) / (image_height-1);
+                    pixelColor.equalAdd(rayColor(camera.get_ray(u, v), scene, depth));
+                });
+                image.setRGB((int)x, (int)y, writeAwtColor(pixelColor, spp).getRGB());
+            }
+        }
+        try {
+            ImageIO.write(image, "png", new java.io.File(filename));
+            System.out.println("\nImage saved to " + filename);
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        System.out.println("\nJob finished in: " + (double)(System.currentTimeMillis()-start_time)/1000+"s");
+
+    }
+
+    void windowRender(HitTable scene, int spp) {
         Color[] pixelColors = new Color[image_height*image_width];
         for (int i = 0; i<image_height*image_width; ++i)
             pixelColors[i] = new Color(0);
+
+        long init_time = System.currentTimeMillis(); // Time for Benchmark
 
         JFrame window = new JFrame("RayTracing") {
             @Override
             public void paint(Graphics g) {
                 super.paint(g);
                 System.out.println(image_width + "x" + image_height + ", " + spp + " samples per pixel");
+
+                // For each sample per pixel, render the whole image
                 for (long s=0; s < spp; ++s) {
-                    long start_time = System.currentTimeMillis(); //Time for Benchmark
+                    long start_time = System.currentTimeMillis(); // Time for Benchmark
                     for (int y = 0; y < image_height; ++y) {
                         for (int x = 0; x < image_width; ++x) {
+
                             double u = (x + randomDouble()) / (image_width - 1);
                             double v = (y + randomDouble()) / (image_height - 1);
+
+                            // Draw the pixel to the screen
                             pixelColors[y * image_width + x].equalAdd(rayColor(camera.get_ray(u, v), scene, depth));
                             g.setColor(writeAwtColor(pixelColors[y * image_width + x], s + 1));
                             g.drawRect(x, y, 1, 1);
@@ -154,9 +197,25 @@ public class Renderer {
                 }
             }
         };
+
+
         window.setSize(image_width, image_height);
         window.setVisible(true);
         window.setResizable(false);
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        // Save the image to a file
+        try {
+            BufferedImage image = new BufferedImage(image_width, image_height, BufferedImage.TYPE_INT_RGB);
+            Graphics2D graphics = image.createGraphics();
+            window.paint(graphics);
+            ImageIO.write(image, "png", new java.io.File("Output.png"));
+            System.out.println("\nImage saved to Output.png");
+            System.out.println("Rendering finished in " + (double)(System.currentTimeMillis()-init_time)/1000+"s");
+
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }
