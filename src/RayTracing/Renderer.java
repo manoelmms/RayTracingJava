@@ -101,6 +101,7 @@ public class Renderer {
         return skyColor(r);
     }
 
+    // Old version of imageRender, kept for benchmarking purposes and for futures references. Do not use.
     void imageRender(HitTable scene, int spp, String filename) {
         try(FileOutputStream file = new FileOutputStream(filename);
             PrintStream filePrint = new PrintStream(file) ) {
@@ -141,18 +142,24 @@ public class Renderer {
 
         for (long y=0; y < image_height; ++y) {
             System.out.print("\r" + "Scanlines remaining: "+(image_height-y));
-            for (long x=0; x < image_width; ++x) {
+            long finalY = y;
+            IntStream.range(0, image_width).parallel().forEach(x -> {
                 Color pixelColor = new Color(0);
-
-                long finalX = x;
-                long finalY = y;
-                IntStream.range(0, spp).parallel().forEach(s -> {
-                    double u = (finalX + randomDouble()) / (image_width-1);
-                    double v = (finalY + randomDouble()) / (image_height-1);
+                for (int s = 0; s < spp; ++s) {
+                    double u = (x + randomDouble()) / (image_width - 1);
+                    double v = (finalY + randomDouble()) / (image_height - 1);
                     pixelColor.equalAdd(rayColor(camera.get_ray(u, v), scene, depth));
-                });
-                image.setRGB((int)x, (int)y, writeAwtColor(pixelColor, spp).getRGB());
-            }
+                }
+                // pixelColor = pixelColor.multiply(1.0 / spp);
+
+                RayResult result = new RayResult();
+                int index = (int) (finalY * image_width + x);
+                result.color = pixelColor;
+                result.index = index;
+                synchronized (image) {
+                    image.setRGB(index % image_width, index / image_width, writeAwtColor(result.color, spp).getRGB());
+                }
+            });
         }
         try {
             ImageIO.write(image, "png", new java.io.File(filename));
