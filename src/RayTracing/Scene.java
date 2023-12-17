@@ -29,7 +29,7 @@ public class Scene {
     }
 
     public static Scene initScene(){
-        Point lookFrom =new Point(0, 0, 0);
+        Point lookFrom = new Point(0, 0, 0);
         Point lookAt = new Point(0, 0, -1);
         Vec3 vup = new Vec3(0, 1, 0);
         Vec3 lookLength = lookFrom.minus(lookAt);
@@ -59,7 +59,7 @@ public class Scene {
     }
 
     public static Scene finalScene(){
-        Point lookFrom =new Point(13, 2, 3);
+        Point lookFrom = new Point(13, 2, 3);
         Point lookAt = new Point(0, 0, 0);
         Vec3 vup = new Vec3(0, 1, 0);
         Vec3 lookLength = lookFrom.minus(lookAt);

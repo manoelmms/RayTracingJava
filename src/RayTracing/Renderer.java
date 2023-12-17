@@ -174,19 +174,27 @@ public class Renderer {
 
     void windowRender(HitTable scene, int spp) {
         Color[] pixelColors = new Color[image_height*image_width];
+
         for (int i = 0; i<image_height*image_width; ++i)
             pixelColors[i] = new Color(0);
 
-        long init_time = System.currentTimeMillis(); // Time for Benchmark
+        JFrame window = getjFrame(scene, spp, pixelColors);
+        window.setVisible(true);
+        window.setResizable(false);
+        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
 
+    private JFrame getjFrame(HitTable scene, int spp, Color[] pixelColors) {
         JFrame window = new JFrame("RayTracing") {
             @Override
             public void paint(Graphics g) {
                 super.paint(g);
                 System.out.println(image_width + "x" + image_height + ", " + spp + " samples per pixel");
+                long init_time = System.currentTimeMillis(); // Time for Benchmark
+                BufferedImage image = new BufferedImage(image_width, image_height, BufferedImage.TYPE_INT_RGB);
 
                 // For each sample per pixel, render the whole image
-                for (long s=0; s < spp; ++s) {
+                for (long s = 0; s < spp; ++s) {
                     long start_time = System.currentTimeMillis(); // Time for Benchmark
                     for (int y = 0; y < image_height; ++y) {
                         for (int x = 0; x < image_width; ++x) {
@@ -198,31 +206,28 @@ public class Renderer {
                             pixelColors[y * image_width + x].equalAdd(rayColor(camera.get_ray(u, v), scene, depth));
                             g.setColor(writeAwtColor(pixelColors[y * image_width + x], s + 1));
                             g.drawRect(x, y, 1, 1);
+
+                            // Save the pixel to the image
+                            if (s == spp - 1) {
+                                image.setRGB(x, y, writeAwtColor(pixelColors[y * image_width + x], s + 1).getRGB());
+                            }
                         }
                     }
-                    System.out.print("\r" + "Sample: " + (s+1) + " " + "in " + (double)(System.currentTimeMillis()-start_time)/1000+"s");
+                    System.out.println("Sample: " + (s+1) + " " + "in " + (double)(System.currentTimeMillis()-start_time)/1000+"s");
+                }
+                try {
+                    ImageIO.write(image, "png", new java.io.File("Output.png"));
+                    System.out.println("\nImage saved to Output.png");
+                    System.out.println("Rendering finished in " + (double)(System.currentTimeMillis()-init_time)/1000+"s");
+                }
+                catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             }
         };
 
 
         window.setSize(image_width, image_height);
-        window.setVisible(true);
-        window.setResizable(false);
-        window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        // Save the image to a file
-        try {
-            BufferedImage image = new BufferedImage(image_width, image_height, BufferedImage.TYPE_INT_RGB);
-            Graphics2D graphics = image.createGraphics();
-            window.paint(graphics);
-            ImageIO.write(image, "png", new java.io.File("Output.png"));
-            System.out.println("\nImage saved to Output.png");
-            System.out.println("Rendering finished in " + (double)(System.currentTimeMillis()-init_time)/1000+"s");
-
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        return window;
     }
 }

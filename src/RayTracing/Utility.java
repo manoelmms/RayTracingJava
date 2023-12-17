@@ -25,4 +25,8 @@ public class Utility {
         if(x<low) return low;
         else return Math.min(x, high);
     }
+
+    public static int readInt() {
+        return Integer.parseInt(System.console().readLine());
+    }
 }
