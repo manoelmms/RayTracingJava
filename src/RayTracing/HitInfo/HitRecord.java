@@ -8,14 +8,16 @@ import RayTracing.Vec3;
 public class HitRecord {
     public double t;
     public Point p;
+    public double u;
+    public double v;
     public Vec3 normal;
-    public boolean front_face;
+    public boolean frontFace;
     public Material mat;
 
 
-    public void set_face_normal(Ray r, Vec3 outward_normal)
+    public void setFaceNormal(Ray r, Vec3 outward_normal)
     {
-        front_face = r.dir().dot(outward_normal) < 0;
-        normal = front_face ? outward_normal : outward_normal.negative();
+        frontFace = r.dir().dot(outward_normal) < 0;
+        normal = frontFace ? outward_normal : outward_normal.negative();
     }
 }

@@ -2,7 +2,7 @@ package RayTracing;
 
 import static RayTracing.Utility.randomDouble;
 public sealed class Vec3 permits Point, Color {
-    double x, y, z;
+    public double x, y, z;
 
     public Vec3(double e0, double e1, double e2) {
         x = e0;
@@ -15,6 +15,13 @@ public sealed class Vec3 permits Point, Color {
         y = s;
         z = s;
     }
+
+    public Vec3(double[] array){
+        x = array[0];
+        y = array[1];
+        z = array[2];
+    }
+
 
     public Vec3 negative() {
         return new Vec3(-x, -y, -z);

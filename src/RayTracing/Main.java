@@ -2,16 +2,16 @@ package RayTracing;
 
 public class Main {
     public static void main(String[] args) {
-        Scene chosen = Scene.finalScene();
+        Scene chosen = Scene.initScene();
 
         // Using a MacBook Air M2 for comparison:
         // imageRender(50spp, 1280x720) for final image = 206.791s
         // imageRenderParallel(50spp, 1280x720) for final image = 46.492s
-        // imageRenderParallel(500spp, 1280x720) for final image = 546.934s
-        // Only takes around 100MB of memory to render!
+        // imageRenderParallel(500spp, 1280x720) for final image = 546.934s - With AABB is 228s!
+        // Only takes around 100MB of memory to render! - With AABB is 600MB!
 
         System.out.println("\nSelect a render mode:");
-        System.out.println("1. Single-threaded with 50 samples per pixel");
+        System.out.println("1. Single-threaded with 50 samples per pixel (deprecated)");
         System.out.println("2. Multi-threaded with 50 samples per pixel");
         System.out.println("3. Multi-threaded with 500 samples per pixel");
         System.out.println("4. Windowed with 15 samples per pixel");
@@ -25,10 +25,18 @@ public class Main {
 
         System.out.println("\nSelect a Scene:");
         System.out.println("1. Initial Scene");
-        System.out.println("2. Final Scene");
+        System.out.println("2. Two Spheres Scene");
+        System.out.println("3. Random Spheres Scene");
+        System.out.println("4. Earth Scene");
+        System.out.println("5. Perlin Spheres Scene");
+        System.out.println("6. Quads Scene");
+        System.out.println("7. Simple Light Scene");
+        System.out.println("8. Cornell Box Scene");
+        System.out.println("9. Cornell Smoke Scene");
+        System.out.println("10. Final Scene");
 
         int sceneChoice = 0;
-        while (sceneChoice < 1 || sceneChoice > 2) {
+        while (sceneChoice < 1 || sceneChoice > 10) {
             sceneChoice = Utility.readInt();
         }
 
@@ -37,13 +45,44 @@ public class Main {
                 chosen = Scene.initScene();
                 break;
             case 2:
+                chosen = Scene.two_spheres_scene();
+                break;
+            case 3:
+                chosen = Scene.random_sphere_scene();
+                break;
+            case 4:
+                chosen = Scene.earth();
+                break;
+            case 5:
+                chosen = Scene.perlinSpheres();
+                break;
+            case 6:
+                chosen = Scene.quads();
+                break;
+            case 7:
+                chosen = Scene.simpleLight();
+                break;
+            case 8:
+                chosen = Scene.cornellBox();
+                break;
+            case 9:
+                chosen = Scene.cornellSmoke();
+                break;
+            case 10:
                 chosen = Scene.finalScene();
                 break;
             default:
                 break;
         }
 
-        Renderer render = new Renderer(chosen.camera);
+        Renderer render;
+
+
+        if (sceneChoice == 6 || sceneChoice  == 8 || sceneChoice == 9 || sceneChoice == 10) {
+            render = new Renderer(chosen.camera, 1080, 1080, chosen.backgroundColor);
+        } else {
+            render = new Renderer(chosen.camera, chosen.backgroundColor);
+        }
 
         switch (choice) {
             case 1:
@@ -53,7 +92,7 @@ public class Main {
                 render.imageRenderParallel(chosen.world, 50, "Output(50spp).png");
                 break;
             case 3:
-                render.imageRenderParallel(chosen.world, 500, "Output(500spp).png");
+                render.imageRenderParallel(chosen.world,  500, "Output(500spp).png");
                 break;
             case 4:
                 render.windowRender(chosen.world, 15);

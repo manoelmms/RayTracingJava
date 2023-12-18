@@ -1,4 +1,4 @@
-package RayTracing.HitTable;
+package RayTracing.Hittable;
 
 import RayTracing.HitInfo.HitRecord;
 import RayTracing.HitInfo.Interval;
@@ -7,16 +7,21 @@ import RayTracing.Point;
 import RayTracing.Ray;
 import RayTracing.Vec3;
 
-public class Sphere implements HitTable{
+public class Sphere implements Hittable {
 
     Point center;
     double radius;
     Material mat;
+    AABB box;
 
     public Sphere(Point center, double radius, Material mat){
         this.center = center;
         this.radius = radius;
         this.mat = mat;
+
+        Point radiusPoint = new Point(radius, radius, radius);
+        box = new AABB(center.minus(radiusPoint), center.add(radius));
+
     }
 
     @Override
@@ -44,9 +49,23 @@ public class Sphere implements HitTable{
         rec.t = root;
         rec.p = r.at(root);
         Vec3 outward_normal = rec.p.minus(center).divide(radius);
-        rec.set_face_normal(r, outward_normal);
+        rec.setFaceNormal(r, outward_normal);
+        getSphereUV(outward_normal, rec);
         rec.mat = mat;
 
         return true;
+    }
+
+    public void getSphereUV(Vec3 normal, HitRecord rec){
+        double theta = Math.acos(-normal.y);
+        double phi = Math.atan2(-normal.z, normal.x) + Math.PI;
+
+        rec.u = phi/(2*Math.PI);
+        rec.v = theta/Math.PI;
+    }
+
+    @Override
+    public AABB boundingBox() {
+        return box;
     }
 }

@@ -3,7 +3,7 @@ package RayTracing;
 import RayTracing.HitInfo.HitRecord;
 import RayTracing.HitInfo.Interval;
 import RayTracing.HitInfo.Radiance;
-import RayTracing.HitTable.HitTable;
+import RayTracing.Hittable.Hittable;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -24,16 +24,20 @@ public class Renderer {
 
     Camera camera;
 
-    Renderer(Camera camera){
+    Color backgroundColor;
+
+    Renderer(Camera camera, Color bgColor){
         this.camera = camera;
         this.image_width = 1280;
         this.image_height = 720;
+        this.backgroundColor = bgColor;
     }
 
-    Renderer(Camera camera, int width, int height){
+    Renderer(Camera camera, int width, int height, Color bgColor){
         this.camera = camera;
         this.image_width = width;
         this.image_height = height;
+        this.backgroundColor = bgColor;
     }
 
     String writeRGB(Vec3 c, int sampler_per_pixel) {
@@ -83,26 +87,32 @@ public class Renderer {
         return colorW.multiply(1.0-t).add(colorB.multiply(t));
     }
 
-    Color rayColor(Ray r, HitTable world, int depth){
+    Color getBackgroundColor(Ray r) {
+        if(backgroundColor != null)
+            return backgroundColor;
+        else
+            return skyColor(r);
+    }
+
+    Color rayColor(Ray r, Hittable world, int depth){
         if(depth==0)
             return new Color(0);
 
         HitRecord rec = new HitRecord();
         Radiance radiance = new Radiance();
         Interval t = new Interval(0.0001, infinity);
+        if(!world.hit(r, t, rec))
+            return getBackgroundColor(r);
 
-        if(world.hit(r, t, rec)) {
-            if(rec.mat.scatter(r, rec, radiance)) {
-                return radiance.attenuation.multiply(rayColor(radiance.scattered, world, depth-1));
-            }
-            return new Color(0);
-        }
+        Color emission = rec.mat.emitted(rec.u, rec.v, rec.p);
+        if(!rec.mat.scatter(r, rec, radiance))
+            return emission;
 
-        return skyColor(r);
+        return emission.add(radiance.attenuation.multiply(rayColor(radiance.scattered, world,depth-1)));
     }
 
     // Old version of imageRender, kept for benchmarking purposes and for futures references. Do not use.
-    void imageRender(HitTable scene, int spp, String filename) {
+    void imageRender(Hittable scene, int spp, String filename) {
         try(FileOutputStream file = new FileOutputStream(filename);
             PrintStream filePrint = new PrintStream(file) ) {
 
@@ -133,7 +143,7 @@ public class Renderer {
         }
     }
 
-    void imageRenderParallel(HitTable scene, int spp, String filename) {
+    void imageRenderParallel(Hittable scene, int spp, String filename) {
 
         BufferedImage image = new BufferedImage(image_width, image_height, BufferedImage.TYPE_INT_RGB);
 
@@ -172,7 +182,7 @@ public class Renderer {
 
     }
 
-    void windowRender(HitTable scene, int spp) {
+    void windowRender(Hittable scene, int spp) {
         Color[] pixelColors = new Color[image_height*image_width];
 
         for (int i = 0; i<image_height*image_width; ++i)
@@ -184,7 +194,7 @@ public class Renderer {
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
     }
 
-    private JFrame getjFrame(HitTable scene, int spp, Color[] pixelColors) {
+    private JFrame getjFrame(Hittable scene, int spp, Color[] pixelColors) {
         JFrame window = new JFrame("RayTracing") {
             @Override
             public void paint(Graphics g) {

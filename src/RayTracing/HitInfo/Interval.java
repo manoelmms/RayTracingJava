@@ -15,6 +15,10 @@ public record Interval(double min, double max) {
         return new Interval(min - padding, max + padding);
     }
 
+    public Interval addOffset(double offset) {
+        return new Interval(min + offset, max + offset);
+    }
+
     public boolean contains(double x) {
         return min <= x && x <= max;
     }

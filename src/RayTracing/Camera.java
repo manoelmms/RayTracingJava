@@ -36,7 +36,8 @@ public class Camera {
 
         Point o = origin.add(offset);
         Vec3 l = lower_left_corner.add(horizontal.multiply(s)).add(vertical.multiply(1-t)).minus(origin).minus(offset);
+        double time = Utility.randomDouble(0,1);
 
-        return new Ray(o,l);
+        return new Ray(o, l, time);
     }
 }

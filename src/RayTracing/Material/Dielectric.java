@@ -4,24 +4,31 @@ import RayTracing.Color;
 import RayTracing.HitInfo.HitRecord;
 import RayTracing.HitInfo.Radiance;
 import RayTracing.Ray;
+import RayTracing.Texture.SolidColor;
+import RayTracing.Texture.Texture;
 import RayTracing.Vec3;
 
 import static RayTracing.Utility.randomDouble;
 
 public class Dielectric implements Material{
 
-    Color albedo;
+    Texture albedo;
     double ir;
 
     public Dielectric(Color color, double irx){
-        albedo = color;
+        albedo = new SolidColor(color);
+        ir = irx;
+    }
+
+    public Dielectric(Texture texture, double irx){
+        albedo = texture;
         ir = irx;
     }
 
     @Override
     public boolean scatter(Ray r, HitRecord rec, Radiance rad) {
 
-        double refraction_ratio = rec.front_face ? (1.0/ir):ir;
+        double refraction_ratio = rec.frontFace ? (1.0/ir):ir;
 
         Vec3 unit_direction = Vec3.unitVector(r.dir());
         double cos_theta = Math.min(unit_direction.negative().dot(rec.normal), 1.0);
@@ -36,8 +43,8 @@ public class Dielectric implements Material{
         else
             direction = Vec3.refract(unit_direction, rec.normal, refraction_ratio);
 
-        rad.scattered = new Ray(rec.p, direction);
-        rad.attenuation = albedo;
+        rad.scattered = new Ray(rec.p, direction, r.time());
+        rad.attenuation = albedo.value(rec.u, rec.v, rec.p);
         return true;
     }
 
