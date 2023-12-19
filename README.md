@@ -1,7 +1,7 @@
 # Sobre o Projeto
 
 *RayTracingJava* trata de um projeto que tem como objetivo implementar um algoritmo de path tracing do zero, sem auxílio de bibliotecas gráficas, que seja possível renderizar modelos 3D e formas geométricas simples - como esferas e paralelogramos - em diversos materiais e texturas.
-Para alcançar esse fim, foi usado como apoio a série de livros [Ray Tracing](https://raytracing.github.io) por Peter Shirley e a linguagem Java. Para mais detalhes teóricos acesse o relatório [clicando aqui](https://github.com/manoelmms/RayTracingJava/wiki)
+Para alcançar esse fim, foi usado como apoio a série de livros [Ray Tracing](https://raytracing.github.io) por Peter Shirley e a linguagem Java. Para mais detalhes teóricos acesse o relatório [clicando aqui](https://github.com/manoelmms/RayTracingJava/wiki).
 
 # Preview
 ![Random_Spheres(500spp) - cópia](https://github.com/manoelmms/RayTracingJava/assets/69607669/eba54626-7be9-4f69-974a-957a405f6d31)
@@ -20,7 +20,7 @@ Para executar o projeto você precisará ter instaladas as seguintes ferramentas
 
 # Execução
 
-Para executar o programa, primeiro faça download da última versão disponível em "**Releases**", após siga as instruçõesÇ
+Para executar o programa, primeiro faça download da última versão disponível em "**Releases**", após siga as instruções:
 
 1. Descompacte o arquivo
 2. Abra na pasta raiz
