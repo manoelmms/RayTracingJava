@@ -236,7 +236,6 @@ public class Renderer {
             }
         };
 
-
         window.setSize(image_width, image_height);
         return window;
     }

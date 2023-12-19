@@ -5,6 +5,8 @@ import java.util.concurrent.ThreadLocalRandom;
 public class Utility {
     public static final double infinity = Double.POSITIVE_INFINITY;
 
+    public static final double negativeInfinity = Double.NEGATIVE_INFINITY;
+
     public static double degreeToRadian(double degree) {
         return degree * Math.PI / 180;
     }

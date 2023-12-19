@@ -7,9 +7,18 @@ public class Noise implements Texture{
     Perlin noise;
     double scale;
 
+    Color color;
+
     public Noise(double scale) {
         this.scale = scale;
-        noise = new Perlin();
+        this.noise = new Perlin();
+        this.color = new Color(1);
+    }
+
+    public Noise(Color color, double scale) {
+        this.scale = scale;
+        this.noise = new Perlin();
+        this.color = color;
     }
 
     public Noise(){

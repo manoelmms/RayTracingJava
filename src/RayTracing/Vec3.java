@@ -202,4 +202,19 @@ public sealed class Vec3 permits Point, Color {
             return p;
         }
     }
+
+    public Vec3 rotate(double angle, int axis) {
+        angle = Math.toRadians(angle);
+        double sinTheta = Math.sin(angle);
+        double cosTheta = Math.cos(angle);
+        Vec3 k;
+        switch (axis){
+            case 0-> k = new Vec3(1,0,0);
+            case 1 -> k = new Vec3(0,1,0);
+            case 2 -> k = new Vec3(0,0,1);
+            default -> throw new IllegalStateException("Unexpected value: " + axis);
+        }
+        Vec3 v = this.multiply(cosTheta).add(k.cross(this).multiply(sinTheta)).add(k.multiply(k.dot(this)).multiply(1-cosTheta));
+        return v;
+    }
 }
